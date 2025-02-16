@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -30,23 +31,27 @@ type Exchange struct {
 func main() {
 	ctx := context.Background()
 
+	log.Println("Realizando consulta da cotação do dólar")
 	response, err := DoGetExchangeRequest(ctx)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
+	log.Println("Tratando a resposta da consulta")
 	exchange, err := ParseExchange(response)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
+	log.Println("Valor da cotação:", exchange.Value)
+	log.Println("Gravando o valor da cotação no arquivo")
 	err = WriteInFile(exchange)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 }
 
-// função que realiza a requisição HTTP para o server.go
+// DoGetExchangeRequest função que realiza a requisição HTTP para o server.go
 func DoGetExchangeRequest(ctx context.Context) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
@@ -66,7 +71,7 @@ func DoGetExchangeRequest(ctx context.Context) ([]byte, error) {
 	return body, nil
 }
 
-// Função que faz o parse do JSON da resposta da requisição
+// ParseExchange Função que faz o parse do JSON da resposta da requisição
 func ParseExchange(dataJson []byte) (Exchange, error) {
 	var exchange Exchange
 	err := json.Unmarshal(dataJson, &exchange)
@@ -76,7 +81,7 @@ func ParseExchange(dataJson []byte) (Exchange, error) {
 	return exchange, nil
 }
 
-// Função que escreve o valor da cotação em um arquivo
+// WriteInFile Função que escreve o valor da cotação em um arquivo
 func WriteInFile(exchange Exchange) error {
 	file, err := os.Create(FILENAME)
 	if err != nil {
@@ -90,18 +95,18 @@ func WriteInFile(exchange Exchange) error {
 	return nil
 }
 
-// Função que fecha o corpo da resposta
+// CloseResponseBody Função que fecha o corpo da resposta
 func CloseResponseBody(body io.ReadCloser) {
 	err := body.Close()
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 }
 
-// Função que fecha o arquivo
+// CloseFile Função que fecha o arquivo
 func CloseFile(file *os.File) {
 	err := file.Close()
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 }
